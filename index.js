@@ -56,18 +56,18 @@ async function run() {
     const userCollection = data.collection('user')
     const requestCollection = data.collection('request')
 
-// --------------------------------------------------------------------------------------
-// --------------------------------------------------------------------------------------------
+    // --------------------------------------------------------------------------------------
+    // --------------------------------------------------------------------------------------------
 
-    
+
     // when user regitered the data will be saved in mongodb user info 
     app.post('/addUser', async (req, res) => {
       const users = req.body;
-      const findUser = await userCollection.findOne({email: users.email})
-      if(findUser){
-        res.send({msg : 'user already exist'})
+      const findUser = await userCollection.findOne({ email: users.email })
+      if (findUser) {
+        res.send({ msg: 'user already exist' })
       }
-      else{
+      else {
 
         const result = await userCollection.insertOne(users);
         res.send(result);
@@ -75,199 +75,210 @@ async function run() {
     });
 
     // when user login the data will be saved in mongodb curUser 
-    app.get('/get-user-role',verifyToken, async (req,res) => {
-      const user = await userCollection.findOne({email : req.user.email})
-      
-      console.log('role is ',user.role)
+    app.get('/get-user-role', verifyToken, async (req, res) => {
+      const user = await userCollection.findOne({ email: req.user.email })
+
+      console.log('role is ', user.role)
       res.send(user)
-    } )
+    })
 
 
-    app.put('/update-user/:id', async(req,res)=>{
+    app.put('/update-user/:id', async (req, res) => {
       const id = req.params.id
-      const filter = {_id : new ObjectId(id)}
-    const task = req.body
-       const options = { upsert: true };
-     const document = {
-      $set: {
-        ...task
+      const filter = { _id: new ObjectId(id) }
+      const task = req.body
+      const options = { upsert: true };
+      const document = {
+        $set: {
+          ...task
+        }
       }
-     }
-       const result = await userCollection.updateOne(filter,document,options)
+      const result = await userCollection.updateOne(filter, document, options)
       res.send(result)
     })
 
     // add request data in mongodb 
-    app.post('/add-request', async(req,res)=>{
-         const users = req.body;
-        const result = await requestCollection.insertOne(users);
-        res.send(result);
-     
+    app.post('/add-request', async (req, res) => {
+      const users = req.body;
+      const result = await requestCollection.insertOne(users);
+      res.send(result);
+
     })
 
     // get logged in user donation request data 
-    app.get('/get-user-request', verifyToken, async(req ,res)=>{
-       const result = await requestCollection.find({reqEmail : req.user.email}).toArray()
-       res.send(result)
+    app.get('/get-user-request', verifyToken, async (req, res) => {
+      const result = await requestCollection.find({ reqEmail: req.user.email }).toArray()
+      res.send(result)
     })
     // get request details
-    app.get('/get-request-details/:id', async(req,res)=>{
-       const id = req.params.id
-      const query = {_id : new ObjectId(id)}
+    app.get('/get-request-details/:id', async (req, res) => {
+      const id = req.params.id
+      const query = { _id: new ObjectId(id) }
       const result = await requestCollection.findOne(query)
       res.send(result)
     })
-     app.get('/recent-request',verifyToken, async (req, res) => {
-      const data = await requestCollection.find({reqEmail : req.user.email}).sort({createdAt : -1}).limit(3).toArray()
+    app.get('/recent-request', verifyToken, async (req, res) => {
+      const data = await requestCollection.find({ reqEmail: req.user.email }).sort({ createdAt: -1 }).limit(3).toArray()
       res.send(data)
     })
 
-   app.get('/get-all-user', async(req,res)=>{
-    const result = await userCollection.find().toArray()
-    res.send(result)
-   })
-   app.get('/get-all-request', async(req,res)=>{
-    const result = await requestCollection.find().toArray()
-    res.send(result)
-   })
-      app.put('/updateRequest/:id',async(req,res)=>{
-    const id = req.params.id
-    const filter = {_id : new ObjectId(id)}
-    const task = req.body
-       const options = { upsert: true };
-     const document = {
-      $set: {
-        ...task
-      }
-     }
-      const result = await requestCollection.updateOne(filter,document,options)
+    app.get('/get-all-user', async (req, res) => {
+      const result = await userCollection.find().toArray()
       res.send(result)
-  })
-     app.delete('/deleteReq/:id', async(req,res)=>{
+    })
+    app.get('/get-all-request', async (req, res) => {
+      const result = await requestCollection.find().toArray()
+      res.send(result)
+    })
+    app.put('/updateRequest/:id', async (req, res) => {
       const id = req.params.id
-      const filter = {_id : new ObjectId(id)}
+      const filter = { _id: new ObjectId(id) }
+      const task = req.body
+      const options = { upsert: true };
+      const document = {
+        $set: {
+          ...task
+        }
+      }
+      const result = await requestCollection.updateOne(filter, document, options)
+      res.send(result)
+    })
+    app.delete('/deleteReq/:id', async (req, res) => {
+      const id = req.params.id
+      const filter = { _id: new ObjectId(id) }
       const result = await requestCollection.deleteOne(filter)
       res.send(result)
     })
-       app.patch('/statusInprogress/:id',  async (req, res) => {
-    const id = req.params.id;
-    const query = { _id: new ObjectId(id) };
-    const updateDoc = {
+    app.patch('/statusInprogress/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const updateDoc = {
         $set: {
-            status: 'inprogress',
-           
-        }
-    };
+          status: 'inprogress',
 
-    const result = await requestCollection.updateOne(query, updateDoc);
-    res.send(result);
-});
-       app.patch('/statusPending/:id',  async (req, res) => {
-    const id = req.params.id;
-    const query = { _id: new ObjectId(id) };
-    const updateDoc = {
-        $set: {
-            status: 'pending',
-           
         }
-    };
+      };
 
-    const result = await requestCollection.updateOne(query, updateDoc);
-    res.send(result);
-});
-       app.patch('/statusDone/:id',  async (req, res) => {
-    const id = req.params.id;
-    const query = { _id: new ObjectId(id) };
-    const updateDoc = {
+      const result = await requestCollection.updateOne(query, updateDoc);
+      res.send(result);
+    });
+    app.patch('/statusPending/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const updateDoc = {
         $set: {
-            status: 'done',
-           
-        }
-    };
+          status: 'pending',
 
-    const result = await requestCollection.updateOne(query, updateDoc);
-    res.send(result);
-});
-       app.patch('/statusCancel/:id',  async (req, res) => {
-    const id = req.params.id;
-    const query = { _id: new ObjectId(id) };
-    const updateDoc = {
-        $set: {
-            status: 'cancel',
-           
         }
-    };
-    const result = await requestCollection.updateOne(query, updateDoc);
-    res.send(result);
-});
-       app.patch('/statusBlock/:id',  async (req, res) => {
-    const id = req.params.id;
-    const query = { _id: new ObjectId(id) };
-    const updateDoc = {
-        $set: {
-            status: 'Blocked',
-           
-        }
-    };
+      };
 
-    const result = await userCollection.updateOne(query, updateDoc);
-    res.send(result);
-});
-       app.patch('/statusActive/:id',  async (req, res) => {
-    const id = req.params.id;
-    const query = { _id: new ObjectId(id) };
-    const updateDoc = {
+      const result = await requestCollection.updateOne(query, updateDoc);
+      res.send(result);
+    });
+    // update status as done 
+    app.patch('/statusDone/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const updateDoc = {
         $set: {
-            status: 'Active',
-           
-        }
-    };
+          status: 'done',
 
-    const result = await userCollection.updateOne(query, updateDoc);
-    res.send(result);
-});
-       app.patch('/roleAdmin/:id',  async (req, res) => {
-    const id = req.params.id;
-    const query = { _id: new ObjectId(id) };
-    const updateDoc = {
+        }
+      };
+
+      const result = await requestCollection.updateOne(query, updateDoc);
+      res.send(result);
+    });
+    app.patch('/statusCancel/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const updateDoc = {
         $set: {
-            role : 'admin',
-           
-        }
-    };
+          status: 'cancel',
 
-    const result = await userCollection.updateOne(query, updateDoc);
-    res.send(result);
-});
-       app.patch('/roleVolunteer/:id',  async (req, res) => {
-    const id = req.params.id;
-    const query = { _id: new ObjectId(id) };
-    const updateDoc = {
+        }
+      };
+      const result = await requestCollection.updateOne(query, updateDoc);
+      res.send(result);
+    });
+    app.patch('/statusBlock/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const updateDoc = {
         $set: {
-            role : 'volunteer',
-           
-        }
-    };
+          status: 'Blocked',
 
-    const result = await userCollection.updateOne(query, updateDoc);
-    res.send(result);
-});
-       app.patch('/roleDonor/:id',  async (req, res) => {
-    const id = req.params.id;
-    const query = { _id: new ObjectId(id) };
-    const updateDoc = {
+        }
+      };
+
+      const result = await userCollection.updateOne(query, updateDoc);
+      res.send(result);
+    });
+    app.patch('/statusActive/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const updateDoc = {
         $set: {
-            role : 'donor',
-           
-        }
-    };
+          status: 'Active',
 
-    const result = await userCollection.updateOne(query, updateDoc);
-    res.send(result);
-});
-  app.get('/get-pending-request',  async(req ,res)=>{
-       const result = await requestCollection.find({status : 'pending'}).toArray()
-       res.send(result)
+        }
+      };
+
+      const result = await userCollection.updateOne(query, updateDoc);
+      res.send(result);
+    });
+    app.patch('/roleAdmin/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          role: 'admin',
+
+        }
+      };
+
+      const result = await userCollection.updateOne(query, updateDoc);
+      res.send(result);
+    });
+    app.patch('/roleVolunteer/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          role: 'volunteer',
+
+        }
+      };
+
+      const result = await userCollection.updateOne(query, updateDoc);
+      res.send(result);
+    });
+    app.patch('/roleDonor/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          role: 'donor',
+
+        }
+      };
+
+      const result = await userCollection.updateOne(query, updateDoc);
+      res.send(result);
+    });
+
+    // find status inprogress  data 
+    app.get('/status-inprogress', async (req, res) => {
+      const result = await requestCollection.find({ status: 'inprogress' }).toArray()
+      res.send(result)
+    })
+    app.get('/status-inprogress-recent', async (req, res) => {
+      const data = await requestCollection.find({ status: 'inprogress' }).sort({ createdAt: 1 }).limit(6).toArray()
+      res.send(data)
+    })
+    app.get('/get-pending-request', async (req, res) => {
+      const result = await requestCollection.find({ status: 'pending' }).toArray()
+      res.send(result)
     })
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
